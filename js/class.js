@@ -41,10 +41,10 @@ class Babe {
         this.age = 0;
         this.family = familyName;
         this.abilities = this.inheritAbilitiesFromFamily();
-        this.birthRate = window.game.findFamilyByName(familyName)?.birthRate;
+        this.birthRate = game.findFamilyByName(familyName)?.birthRate;
     }
     inheritAbilitiesFromFamily() {
-        return this.abilities = window?.game.findFamilyByName(this.family)?.familyAbilities;
+        return this.abilities = game.findFamilyByName(this.family)?.familyAbilities;
     }
 }
 class family {
@@ -62,6 +62,6 @@ class family {
     }
     birth() {
         console.log("birth called");
-        window.game.babeLib.push(new Babe(this.name));
+        game.babeLib.push(new Babe(this.name));
     }
 }

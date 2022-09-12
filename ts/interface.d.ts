@@ -1,3 +1,12 @@
+declare const game
+
+declare module './three.module.js' {
+    import * as THREE from 'three'
+}
+
+interface Window {
+    game: Game;
+}
 interface babe {
     age?: number;    // range [0,3] , this can be improved (maybe) through mutations
     family: string;
