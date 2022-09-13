@@ -83,6 +83,7 @@ export class Game {
             //grow & update color
             //genNewBabe
             this.babeLib[babe].update();
+            console.log("----");
             console.log(this.babeLib.length);
             //this.babeLib[babe]?.genCube()
             this.babeLib[babe]?.genChild();

@@ -89,6 +89,8 @@ export class Game {
             //grow & update color
             //genNewBabe
             this.babeLib[babe].update()
+            console.log("----");
+            
             console.log(this.babeLib.length);
             
             //this.babeLib[babe]?.genCube()
@@ -96,7 +98,7 @@ export class Game {
         }
 
         game.babeLib = game.babeLib.filter((e: any) => {
-            return e.age < 4
+            return e.age < 4    
         })
     }
     start(config: config) {
@@ -149,8 +151,6 @@ class Babe {
             game.scene.add(this.cube)
             this.age = 0
         }
-
-
     }
 
     update() {
