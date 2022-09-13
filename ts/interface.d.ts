@@ -1,4 +1,4 @@
-declare const game
+declare const game: Game
 
 declare module './three.module.js' {
     import * as THREE from 'three'
@@ -8,11 +8,14 @@ interface Window {
     game: Game;
 }
 interface babe {
+    color: any;
+    cube: any;
+    genCube: any;
     age?: number;    // range [0,3] , this can be improved (maybe) through mutations
     family: string;
     location?: { x: number, y: number }
     abilities?: [];
-    mutate(): void;
+    mutate(): void;     //provided by config?
     birthRate?: family[birthRate]
 }
 
