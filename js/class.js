@@ -58,41 +58,38 @@ export class Game {
     }
     ;
     keyEvent() {
-        document.addEventListener("keypress", (e) => {
+        window.onkeydown = (e) => {
+            let velocity = 0.1;
             if (e.key == "w") {
-                this.camera.position.z += 0.1;
+                this.camera.position.z += velocity;
             }
             if (e.key == "s") {
-                this.camera.position.z -= 0.1;
+                this.camera.position.z -= velocity;
             }
             if (e.key == "a") {
-                this.camera.position.x += 0.1;
+                this.camera.position.x += velocity;
             }
             if (e.key == "d") {
-                this.camera.position.x -= 0.1;
+                this.camera.position.x -= velocity;
             }
             if (e.key == " ") {
                 this.nextRound();
                 e.preventDefault();
             }
-        });
+        };
     }
     nextRound() {
         for (let babe in this.babeLib) {
             //grow & update color
             //genNewBabe
-            this.babeLib[babe].age++;
-            this.babeLib[babe].cube.material.color.set(this.babeLib[babe].color[this.babeLib[babe].age]);
-            if ((this.babeLib[babe].age >= 5)) {
-                this.babeLib[babe].cube.visible = false;
-                game.coordinate.set(this.babeLib[babe].location, 0);
-                game.babeLib = game.babeLib.filter((e) => {
-                    return e.age < 5;
-                });
-            }
+            this.babeLib[babe].update();
+            console.log(this.babeLib.length);
             //this.babeLib[babe]?.genCube()
             this.babeLib[babe]?.genChild();
         }
+        game.babeLib = game.babeLib.filter((e) => {
+            return e.age < 4;
+        });
     }
     start(config) {
         this.init();
@@ -109,15 +106,16 @@ class Babe {
     family;
     location;
     cube;
-    color = [0x00ff00, 0xffff00, 0xff6633, 0xff0000];
+    color = [0x00ff00, 0xffff00, 0xffcc33, 0xff0000];
     abilities;
     birthRate;
     constructor(familyName, poz) {
+        this.age = 0;
         this.family = familyName;
         this.abilities = this.inheritAbilitiesFromFamily();
         this.birthRate = game.findFamilyByName(familyName)?.birthRate;
         let geometry = new THREE.BoxGeometry(1, 1, 1);
-        let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        let material = new THREE.MeshBasicMaterial({ color: this.color[this.age] });
         this.cube = new THREE.Mesh(geometry, material);
         let x = poz.x; //Math.floor(Math.random() * 10)
         let y = poz.y; //Math.floor(Math.random() * 10)
@@ -125,7 +123,7 @@ class Babe {
         game.coordinate.set({ x: x, y: y }, 1);
         this.cube.position.set(x - 0.5, 0, y + 0.5);
         game.scene.add(this.cube);
-        this.age = 0;
+        this.cube.material.color.set(this.color[this.age]);
     }
     genCube() {
         if (!this.age) {
@@ -138,20 +136,31 @@ class Babe {
             this.age = 0;
         }
     }
+    update() {
+        this.age++;
+        this.cube.material.color.set(this.color[this.age]);
+        if ((this.age >= 4)) {
+            this.cube.visible = false;
+            game.coordinate.set(this.location, 0);
+            game.scene.children = game.scene.children.filter((e) => {
+                return e != this.cube;
+            });
+        }
+    }
     genChild() {
         let x = this.location.x;
         let y = this.location.y;
         //暂未考虑边界
-        if (game.coordinate.isEmpty({ x: x + 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate) {
+        if (game.coordinate.isEmpty({ x: x + 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x + 1, y: y }));
         }
-        if (game.coordinate.isEmpty({ x: x - 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate) {
+        if (game.coordinate.isEmpty({ x: x - 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x - 1, y: y }));
         }
-        if (game.coordinate.isEmpty({ x: x, y: y + 1 }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate) {
+        if (game.coordinate.isEmpty({ x: x, y: y + 1 }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y + 1 }));
         }
-        if (game.coordinate.isEmpty({ x: x, y: y - 1 }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate) {
+        if (game.coordinate.isEmpty({ x: x, y: y - 1 }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y - 1 }));
         }
     }
