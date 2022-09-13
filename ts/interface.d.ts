@@ -8,6 +8,7 @@ interface Window {
     game: Game;
 }
 interface babe {
+    genChild(): unknown;
     color: any;
     cube: any;
     genCube: any;
