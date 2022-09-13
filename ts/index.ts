@@ -14,11 +14,13 @@ const someab:ability = {
     name: "tmp", description: "tmp", probability: 0.01
 }
 
+const config = { birthRate: 0.35, maxMember: 100 }
+
 window.game = new Game()
 game.regAbility(lifeImprove)
 game.regAbility(someab)
 
-game.start()
+game.start(config)
 
 //test code
 

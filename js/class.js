@@ -100,7 +100,6 @@ export class Game {
         this.familyLib.push(new family(this.config));
         game.familyLib[0].familyAbilities.push(this.findAbilityByName("lifeImprove"));
         game.familyLib[0].birth();
-        console.log(this.babeLib);
         this.keyEvent();
         this.animate();
     }
@@ -142,6 +141,7 @@ class Babe {
     genChild() {
         let x = this.location.x;
         let y = this.location.y;
+        //暂未考虑边界
         if (game.coordinate.isEmpty({ x: x + 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate) {
             game.babeLib.push(new Babe(this.family, { x: x + 1, y: y }));
         }
@@ -178,7 +178,8 @@ class family {
     }
 }
 class coordinate {
-    block = []; //16*16
+    block = []; //outter: 16*16 innner: 16*16
+    //暂时大小只为256*256
     /*eg
     [
         [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
