@@ -1,11 +1,16 @@
+import * as THREE from "./three.module.js";
 export class Game {
     abilityLib: Array<ability> = [];
     familyLib: Array<family> = [];
     babeLib: Array<babe> = [];
     config!: config;
+    scene!: any;
+    camera: any;
+    renderer: any;
+    coordinate!: coordinate;
     constructor() {
         console.log("abilityLib created");
-
+        this.coordinate = new coordinate()
     }
 
     regAbility(ability: ability) {
@@ -29,10 +34,83 @@ export class Game {
             return result
         }
     }
+    init() {
+        //create scene
+        this.scene = new THREE.Scene()
+
+        //camera  init
+        let frustumSize = 16
+        const aspect = window.innerWidth / window.innerHeight;
+        this.camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 1000);
+        this.camera.position.set(0, 10, 0);
+        this.camera.up.set(0, 0, 1);
+        this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        //bind to element
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(this.renderer.domElement);
+
+        //add grid
+        const size = 16;
+        const divisions = 16;
+        const gridHelper = new THREE.GridHelper(size, divisions);
+        this.scene.add(gridHelper);
+    }
+    animate() {
+        requestAnimationFrame(this.animate.bind(this));
+        this.renderer.render(this.scene, this.camera);
+    };
+    keyEvent() {
+        document.addEventListener("keypress", (e) => {
+
+            if (e.key == "w") {
+                this.camera.position.z += 0.1
+            }
+            if (e.key == "s") {
+                this.camera.position.z -= 0.1
+            }
+            if (e.key == "a") {
+                this.camera.position.x += 0.1
+            }
+            if (e.key == "d") {
+                this.camera.position.x -= 0.1
+            }
+            if (e.key == " ") {
+                this.nextRound()
+                e.preventDefault()
+            }
+        })
+    }
+
+    nextRound() {
+
+        for (let babe in this.babeLib) {
+            //grow & update color
+            //genNewBabe
+            this.babeLib[babe].age++
+            this.babeLib[babe].cube.material.color.set(this.babeLib[babe].color[this.babeLib[babe].age])
+            if ((this.babeLib[babe].age >= 5)) {
+                this.babeLib[babe].cube.visible = false
+                game.babeLib = game.babeLib.filter((e: any) => {
+                    return e.age < 5
+                })
+            }
+
+
+            this.babeLib[babe]?.genCube()
+        }
+    }
     start(config: config) {
         this.config = config || { birthRate: 0.4, maxMember: 100 };
         this.familyLib.push(new family(this.config));
+        game.familyLib[0].familyAbilities.push(this.findAbilityByName("lifeImprove"))
+        game.familyLib[0].birth()
+        console.log(this.babeLib);
 
+        this.init()
+        this.keyEvent()
+        this.animate()
     }
 }
 
@@ -41,6 +119,8 @@ class Babe {
     age!: number;    // range [0,3] , this can be improved (maybe) through mutations
     family!: string;
     location!: { x: number; y: number; };
+    cube!: any;
+    color: [number, number, number, number] = [0x00ff00, 0xffff00, 0xff6633, 0xff0000]
     abilities!: [];
     birthRate!: number;
     constructor(familyName: string) {
@@ -48,6 +128,14 @@ class Babe {
         this.family = familyName
         this.abilities = this.inheritAbilitiesFromFamily()
         this.birthRate = game.findFamilyByName(familyName)?.birthRate
+        let geometry = new THREE.BoxGeometry(1, 1, 1);
+        let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        this.cube = new THREE.Mesh(geometry, material);
+    }
+
+    genCube() {//only call once
+        this.cube.position.set(Math.floor(Math.random() * 10), 0, Math.floor(Math.random() * 10))
+        game.scene.add(this.cube)
     }
 
     inheritAbilitiesFromFamily(): [] {
@@ -72,5 +160,33 @@ class family {
     birth() {
         console.log("birth called");
         game.babeLib.push(new Babe(this.name))
+    }
+}
+
+class coordinate {
+    blockIndex: Array<number> = [];
+    block: Array<number> = []; //16*16
+    /*eg 
+    [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+                    ......
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    ]
+
+    */
+    find(poz: { x: number; y: number; }) {
+        //stupid
+        let blockIndex, index;
+        let _x = 128 + poz.x
+        let _y = Math.abs(poz.y - 128)
+        let x_index = 0,y_index = 0
+        Math.ceil(_x /16) == _x /16 ? x_index = (_x / 16) : x_index = Math.ceil(_x / 16) -1
+        Math.ceil(_y /16) == _y /16 ? y_index = (_y / 16) : y_index = Math.ceil(_y / 16) -1
+        let x = Math.abs(_x % 16)
+        let y = Math.abs(_y % 16)
+        blockIndex = y_index * 16 + x_index
+        index = y * 16 + x -1
+        return { blockIndex, index }
     }
 }
