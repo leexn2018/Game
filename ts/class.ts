@@ -1,3 +1,4 @@
+import { lerp16 } from "./math.js";
 import * as THREE from "./three.module.js";
 export class Game {
     abilityLib: Array<ability> = [];
@@ -63,7 +64,7 @@ export class Game {
     };
     keyEvent() {
         window.onkeydown = (e) => {
-            let velocity = 0.1
+            let velocity = 0.5
 
             if (e.key == "w") {
                 this.camera.position.z += velocity;
@@ -89,16 +90,15 @@ export class Game {
             //grow & update color
             //genNewBabe
             this.babeLib[babe].update()
-            console.log("----");
+            //console.log("----");
             
-            console.log(this.babeLib.length);
-            
-            //this.babeLib[babe]?.genCube()
-            this.babeLib[babe]?.genChild()
+            //console.log(this.babeLib.length);
+        
+            this.babeLib[babe].genChild()
         }
-
+        //update babeLib
         game.babeLib = game.babeLib.filter((e: any) => {
-            return e.age < 4    
+            return e.age < e.max_age + 1  
         })
     }
     start(config: config) {
@@ -116,17 +116,24 @@ export class Game {
 
 
 class Babe {
-    age!: number;    // range [0,3] , this can be improved (maybe) through mutations
+    age!: number;
+    max_age:number = 3    // range [0,3] , this can be improved (maybe) through mutations
     family!: string;
     location!: { x: number; y: number; };
     cube!: any;
-    color: [number, number, number, number] = [0x00ff00, 0xffff00, 0xffcc33, 0xff0000]
-    abilities!: [];
+    color!: Array<number>;
+    abilities!: any;
     birthRate!: number;
     constructor(familyName: string, poz: { x: number; y: number; }) {
         this.age = 0
         this.family = familyName
         this.abilities = this.inheritAbilitiesFromFamily()
+        
+        //activate ability
+        for (let index in this.abilities) {
+            this.abilities[index].method(this)
+        }
+        this.color = lerp16(0x00ff00,0xff0000,this.max_age+1)
         this.birthRate = game.findFamilyByName(familyName)?.birthRate
         let geometry = new THREE.BoxGeometry(1, 1, 1);
         let material = new THREE.MeshBasicMaterial({ color: this.color[this.age] });
@@ -153,33 +160,55 @@ class Babe {
         }
     }
 
+    mutate() {
+        if(Math.random()){
+            for (let index in game.abilityLib)
+            {
+                if (Math.random() <= game.abilityLib[index].probability)
+                {
+                    console.log("mutated");
+                    if (this.abilities.filter((e)=>{return e == game.abilityLib[index]}).length == 1){
+                        console.log(1);
+                        console.log(game.abilityLib[index].name);
+                        
+                    }
+                }
+            }
+        }
+    }
+
     update() {
         this.age++
         this.cube.material.color.set(this.color[this.age])
-        if ((this.age >= 4)) {
+        if ((this.age >= this.max_age+1)) {
             this.cube.visible = false
             game.coordinate.set(this.location, 0) 
             game.scene.children = game.scene.children.filter((e: any)=>{ //清除场景中多余的cube
                 return e != this.cube
             })
         }
+        this.mutate()
     }
 
     genChild() {
         let x = this.location.x
         let y = this.location.y
 
+        if ( this.age > this.max_age-1 || this.age < 1 ){
+            return
+        }
         //暂未考虑边界
-        if (game.coordinate.isEmpty({ x: x + 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        //上下左右 判断 生成
+        if (game.coordinate.isEmpty({ x: x + 1, y: y })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x + 1, y: y }))
         }
-        if (game.coordinate.isEmpty({ x: x - 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x - 1, y: y })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x - 1, y: y }))
         }
-        if (game.coordinate.isEmpty({ x: x, y: y + 1 }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x, y: y + 1 })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y + 1 }))
         }
-        if (game.coordinate.isEmpty({ x: x, y: y - 1 }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x, y: y - 1 })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y - 1 }))
         }
     }

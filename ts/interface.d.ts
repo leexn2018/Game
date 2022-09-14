@@ -34,7 +34,8 @@ interface ability {
     description: string;
     level?: number;     // babe & family will have this
     probability: number;    // range [0,1], better lower than 0.05 , babe's mutation will use this
-    data?: {};      //also babe & family will have this
+    data?: {};
+    method?(any): void      //also babe & family will have this
 }
 
 interface config {

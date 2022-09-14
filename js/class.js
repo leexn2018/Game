@@ -1,3 +1,4 @@
+import { lerp16 } from "./math.js";
 import * as THREE from "./three.module.js";
 export class Game {
     abilityLib = [];
@@ -33,20 +34,16 @@ export class Game {
         }
     }
     init() {
-        //create scene
         this.scene = new THREE.Scene();
-        //camera  init
         let frustumSize = 25;
         const aspect = window.innerWidth / window.innerHeight;
         this.camera = new THREE.OrthographicCamera(frustumSize * aspect / -2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / -2, 1, 1000);
         this.camera.position.set(0, 10, 0);
         this.camera.up.set(0, 0, 1);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
-        //bind to element
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
-        //add grid
         const size = 16;
         const divisions = 16;
         const gridHelper = new THREE.GridHelper(size, divisions);
@@ -59,7 +56,7 @@ export class Game {
     ;
     keyEvent() {
         window.onkeydown = (e) => {
-            let velocity = 0.1;
+            let velocity = 0.5;
             if (e.key == "w") {
                 this.camera.position.z += velocity;
             }
@@ -80,16 +77,11 @@ export class Game {
     }
     nextRound() {
         for (let babe in this.babeLib) {
-            //grow & update color
-            //genNewBabe
             this.babeLib[babe].update();
-            console.log("----");
-            console.log(this.babeLib.length);
-            //this.babeLib[babe]?.genCube()
-            this.babeLib[babe]?.genChild();
+            this.babeLib[babe].genChild();
         }
         game.babeLib = game.babeLib.filter((e) => {
-            return e.age < 4;
+            return e.age < e.max_age + 1;
         });
     }
     start(config) {
@@ -103,23 +95,28 @@ export class Game {
     }
 }
 class Babe {
-    age; // range [0,3] , this can be improved (maybe) through mutations
+    age;
+    max_age = 3;
     family;
     location;
     cube;
-    color = [0x00ff00, 0xffff00, 0xffcc33, 0xff0000];
+    color;
     abilities;
     birthRate;
     constructor(familyName, poz) {
         this.age = 0;
         this.family = familyName;
         this.abilities = this.inheritAbilitiesFromFamily();
+        for (let index in this.abilities) {
+            this.abilities[index].method(this);
+        }
+        this.color = lerp16(0x00ff00, 0xff0000, this.max_age + 1);
         this.birthRate = game.findFamilyByName(familyName)?.birthRate;
         let geometry = new THREE.BoxGeometry(1, 1, 1);
         let material = new THREE.MeshBasicMaterial({ color: this.color[this.age] });
         this.cube = new THREE.Mesh(geometry, material);
-        let x = poz.x; //Math.floor(Math.random() * 10)
-        let y = poz.y; //Math.floor(Math.random() * 10)
+        let x = poz.x;
+        let y = poz.y;
         this.location = { x: x, y: y };
         game.coordinate.set({ x: x, y: y }, 1);
         this.cube.position.set(x - 0.5, 0, y + 0.5);
@@ -137,31 +134,47 @@ class Babe {
             this.age = 0;
         }
     }
+    mutate() {
+        if (Math.random()) {
+            for (let index in game.abilityLib) {
+                if (Math.random() <= game.abilityLib[index].probability) {
+                    console.log("mutated");
+                    if (this.abilities.filter((e) => { return e == game.abilityLib[index]; }).length == 1) {
+                        console.log(1);
+                        console.log(game.abilityLib[index].name);
+                    }
+                }
+            }
+        }
+    }
     update() {
         this.age++;
         this.cube.material.color.set(this.color[this.age]);
-        if ((this.age >= 4)) {
+        if ((this.age >= this.max_age + 1)) {
             this.cube.visible = false;
             game.coordinate.set(this.location, 0);
             game.scene.children = game.scene.children.filter((e) => {
                 return e != this.cube;
             });
         }
+        this.mutate();
     }
     genChild() {
         let x = this.location.x;
         let y = this.location.y;
-        //暂未考虑边界
-        if (game.coordinate.isEmpty({ x: x + 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (this.age > this.max_age - 1 || this.age < 1) {
+            return;
+        }
+        if (game.coordinate.isEmpty({ x: x + 1, y: y }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x + 1, y: y }));
         }
-        if (game.coordinate.isEmpty({ x: x - 1, y: y }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x - 1, y: y }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x - 1, y: y }));
         }
-        if (game.coordinate.isEmpty({ x: x, y: y + 1 }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x, y: y + 1 }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y + 1 }));
         }
-        if (game.coordinate.isEmpty({ x: x, y: y - 1 }) && this.age <= 2 && this.age >= 1 && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x, y: y - 1 }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y - 1 }));
         }
     }
@@ -172,7 +185,7 @@ class Babe {
 class family {
     name;
     member;
-    maxMember; // this can be improved (maybe) through mutations
+    maxMember;
     familyAbilities = [];
     birthRate;
     constructor(config) {
@@ -188,25 +201,12 @@ class family {
     }
 }
 class coordinate {
-    block = []; //outter: 16*16 innner: 16*16
-    //暂时大小只为256*256
-    /*eg
-    [
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-                    ......
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        
-                    ......
-    ]
-
-    */
+    block = [];
     constructor() {
         let inner = new Array(16).fill(0);
         this.block = new Array(256).fill(inner);
     }
     find(poz) {
-        //stupid
         let blockIndex, index;
         let _x = 128 + poz.x;
         let _y = Math.abs(poz.y - 128);
@@ -221,7 +221,7 @@ class coordinate {
     }
     isEmpty(poz) {
         let r = this.find(poz);
-        return !this.block[r.blockIndex][r.index]; // return 0 or 1
+        return !this.block[r.blockIndex][r.index];
     }
     set(poz, value) {
         let r = this.find(poz);
