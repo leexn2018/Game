@@ -1,8 +1,7 @@
-
-import { LOADIPHLPAPI } from "dns";
 import { lerp16 } from "./math.js";
 import * as THREE from "three";
 export class Game {
+    isRunning: boolean = false;
     abilityLib: Array<ability> = [];
     familyLib: Array<family> = [];
     babeLib: Array<babe> = [];
@@ -12,8 +11,9 @@ export class Game {
     renderer: any;
     coordinate!: coordinate;
     constructor() {
-        console.log("abilityLib created");
         this.coordinate = new coordinate()
+        this.init()
+        this.animate()
     }
 
     regAbility(ability: ability) {
@@ -42,7 +42,7 @@ export class Game {
         this.scene = new THREE.Scene()
 
         //camera  init
-        let frustumSize = 25
+        let frustumSize = 100
         const aspect = window.innerWidth / window.innerHeight;
         this.camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 1000);
         this.camera.position.set(0, 10, 0);
@@ -50,6 +50,7 @@ export class Game {
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         //bind to element
+        if (!this.renderer){
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
@@ -59,10 +60,13 @@ export class Game {
         const divisions = 16;
         const gridHelper = new THREE.GridHelper(size, divisions);
         this.scene.add(gridHelper);
+        }
+
+        this.keyEvent()
     }
     animate() {
         requestAnimationFrame(this.animate.bind(this));
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.scene, this.camera);        
     };
     keyEvent() {
         window.onkeydown = (e) => {
@@ -91,6 +95,9 @@ export class Game {
     }
 
     nextRound() {
+        if(!this.isRunning){
+            return
+        }
         for (let babe in this.babeLib) {
             //grow & update color
             //genNewBabe
@@ -107,18 +114,23 @@ export class Game {
         })
     }
     start(config: config) {
-        this.init()
+        this.isRunning = true
         this.config = config || { birthRate: 0.4, maxMember: 100 };
         this.familyLib.push(new family(this.config));
         game.familyLib[0].familyAbilities.push(this.findAbilityByName("lifeImprove"))
-        game.familyLib[0].birth()
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: 0, y: 0 }))
+    }
 
-
-        this.keyEvent()
-        this.animate()
+    reset(){
+        this.isRunning = false
+        this.babeLib= []
+        this.familyLib = []
+        this.scene.children = game.scene.children.filter((e:any)=>{
+          return e.type != "babe"
+        })
+        this.coordinate.reset()
     }
 }
-
 
 class Babe {
     age!: number;
@@ -143,7 +155,8 @@ class Babe {
         let geometry = new THREE.BoxGeometry(1, 1, 1);
         let material = new THREE.MeshBasicMaterial({ color: this.color[this.age] });
         this.cube = new THREE.Mesh(geometry, material);
-
+        this.cube.type = "babe"
+        // 添加至BabeLib
         let x = poz.x //Math.floor(Math.random() * 10)
         let y = poz.y //Math.floor(Math.random() * 10)
         this.location = { x: x, y: y }
@@ -151,18 +164,6 @@ class Babe {
         this.cube.position.set(x - 0.5, 0, y + 0.5)
         game.scene.add(this.cube)
         this.cube.material.color.set(this.color[this.age])
-    }
-
-    genCube() {//only call once  **** scrapped
-        if (!this.age) {
-            let x = Math.floor(Math.random() * 10)
-            let y = Math.floor(Math.random() * 10)
-            this.location = { x: x, y: y }
-            game.coordinate.set({ x: x, y: y }, 1)
-            this.cube.position.set(x - 0.5, 0, y + 0.5)
-            game.scene.add(this.cube)
-            this.age = 0
-        }
     }
 
     mutate() {
@@ -203,6 +204,7 @@ class Babe {
         }
         //暂未考虑边界
         //上下左右 判断 生成
+        //无智慧
         if (game.coordinate.isEmpty({ x: x + 1, y: y })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x + 1, y: y }))
         }
@@ -224,21 +226,15 @@ class Babe {
 
 class family {
     name!: string;
-    member!: number;
     maxMember!: number;  // this can be improved (maybe) through mutations
     familyAbilities: [] = [];
     birthRate!: number;
     constructor(config: config) {
         this.name = "f" + Math.floor(Math.random() * 10000);
         this.birthRate = config.birthRate;
-        this.member = 0;
         this.maxMember = config.maxMember;
         console.log(this.name);
 
-    }
-    birth() { // target: call this when a family created    x
-        console.log("birth called");
-        game.babeLib.push(new Babe(this.name, { x: 0, y: 0 }))
     }
 } 
 
@@ -282,5 +278,10 @@ class coordinate {
     set(poz: { x: number; y: number; }, value: number) {
         let r = this.find(poz)
         this.block[r.blockIndex][r.index] = value
+    }
+    reset()
+    {
+        let inner = new Array(16).fill(0)
+        this.block = new Array(256).fill(inner)
     }
 }
