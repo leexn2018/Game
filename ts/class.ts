@@ -236,7 +236,7 @@ class family {
         console.log("birth called");
         game.babeLib.push(new Babe(this.name, { x: 0, y: 0 }))
     }
-}
+} 
 
 class coordinate {
     block: Array<Array<number>> = []; //outter: 16*16 innner: 16*16
