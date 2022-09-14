@@ -167,7 +167,7 @@ class Babe {
                 if (Math.random() <= game.abilityLib[index].probability)
                 {
                     console.log("mutated");
-                    if (this.abilities.filter((e)=>{return e == game.abilityLib[index]}).length == 1){
+                    if (this.abilities.filter((e:any)=>{return e == game.abilityLib[index]}).length == 1){
                         console.log(1);
                         console.log(game.abilityLib[index].name);
                         
