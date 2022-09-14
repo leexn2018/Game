@@ -13,7 +13,6 @@ onMounted(() => {
   console.log("loaded");
   let loading = document.querySelector("#loading")
   loading?.parentNode?.removeChild(loading)
-
   //set view
 
   //ability define
@@ -27,7 +26,7 @@ onMounted(() => {
   const config = { birthRate: 0.5, maxMember: 23 }
 
   window.game = new Game()
-  game.regAbility(lifeImprove)
+  !game.regAbility(lifeImprove)
   game.regAbility(someab)
 
   game.start(config)
@@ -45,7 +44,7 @@ onMounted(() => {
 #loading>div {
   margin: 0;
 }
-body {
+html {
   margin: 0
 }
 </style>
