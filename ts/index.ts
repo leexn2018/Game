@@ -15,7 +15,7 @@ const someab:ability = {
     name: "tmp", description: "tmp", probability: 0.01
 }
 
-const config = { birthRate: 1, maxMember: 23 }
+const config = { birthRate: 0.5, maxMember: 23 }
 
 window.game = new Game()
 game.regAbility(lifeImprove)

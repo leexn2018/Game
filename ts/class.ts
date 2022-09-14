@@ -83,6 +83,9 @@ export class Game {
                 e.preventDefault();
             }
         }
+        document.addEventListener("click",()=>{
+            this.nextRound()
+        })
     }
 
     nextRound() {
@@ -168,7 +171,6 @@ class Babe {
                 {
                     console.log("mutated");
                     if (this.abilities.filter((e:any)=>{return e == game.abilityLib[index]}).length == 1){
-                        console.log(1);
                         console.log(game.abilityLib[index].name);
                         
                     }
