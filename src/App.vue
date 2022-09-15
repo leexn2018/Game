@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { Game } from "./assets/js/class.js"
+import { Game , test } from "./assets/js/class.js"
 import { ref } from 'vue'
 import * as ability from './assets/js/ability.js'
 let _a = ref(true)
@@ -50,6 +50,7 @@ onMounted(() => {
 
   window.game = new Game()
   ability.reg()
+  window.test = new test()
 })
 
 

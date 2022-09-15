@@ -42,7 +42,7 @@ export class Game {
         this.scene = new THREE.Scene()
 
         //camera  init
-        let frustumSize = 100
+        let frustumSize = 36
         const aspect = window.innerWidth / window.innerHeight;
         this.camera = new THREE.OrthographicCamera(frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 1, 1000);
         this.camera.position.set(0, 10, 0);
@@ -50,23 +50,23 @@ export class Game {
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         //bind to element
-        if (!this.renderer){
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(this.renderer.domElement);
+        if (!this.renderer) {
+            this.renderer = new THREE.WebGLRenderer({ antialias: true });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(this.renderer.domElement);
 
-        //add grid
-        const size = 16;
-        const divisions = 16;
-        const gridHelper = new THREE.GridHelper(size, divisions);
-        this.scene.add(gridHelper);
+            //add grid
+            const size = 16;
+            const divisions = 16;
+            const gridHelper = new THREE.GridHelper(size, divisions);
+            this.scene.add(gridHelper);
         }
 
         this.keyEvent()
     }
     animate() {
         requestAnimationFrame(this.animate.bind(this));
-        this.renderer.render(this.scene, this.camera);        
+        this.renderer.render(this.scene, this.camera);
     };
     keyEvent() {
         window.onkeydown = (e) => {
@@ -89,29 +89,28 @@ export class Game {
                 e.preventDefault();
             }
         }
-        document.addEventListener("click",()=>{
+        document.querySelector("canvas")
+            ?.addEventListener("click", () => {
             this.nextRound()
         })
     }
 
     nextRound() {
-        if(!this.isRunning){
+        if (!this.isRunning) {
             return
         }
         for (let babe in this.babeLib) {
             //grow & update color
             //genNewBabe
-            this.babeLib[babe].update()
+            this.babeLib[babe]?.update()
             //console.log("----");
 
             //console.log(this.babeLib.length);
 
-            this.babeLib[babe].genChild()
+            this.babeLib[babe]?.genChild()
         }
         //update babeLib
-        game.babeLib = game.babeLib.filter((e: any) => {
-            return e.age < e.max_age + 1  
-        })
+        
     }
     start(config: config) {
         this.isRunning = true
@@ -121,12 +120,12 @@ export class Game {
         game.babeLib.push(new Babe(game.familyLib[0].name, { x: 0, y: 0 }))
     }
 
-    reset(){
+    reset() {
         this.isRunning = false
-        this.babeLib= []
+        this.babeLib = []
         this.familyLib = []
-        this.scene.children = game.scene.children.filter((e:any)=>{
-          return e.type != "babe"
+        this.scene.children = game.scene.children.filter((e: any) => {
+            return e.type != "babe"
         })
         this.coordinate.reset()
     }
@@ -134,7 +133,7 @@ export class Game {
 
 class Babe {
     age!: number;
-    max_age:number = 3    // range [0,3] , this can be improved (maybe) through mutations
+    max_age: number = 3    // range [0,3] , this can be improved (maybe) through mutations
     family!: string;
     location!: { x: number; y: number; };
     cube!: any;
@@ -150,8 +149,8 @@ class Babe {
         for (let index in this.abilities) {
             this.abilities[index].method(this)
         }
-        this.color = lerp16(0x00ff00,0xff0000,this.max_age+1)
-        this.birthRate = game.findFamilyByName(familyName)?.birthRate
+        this.color = lerp16(0x00ff00, 0xff0000, this.max_age + 1)
+        this.birthRate = game.findFamilyByName(familyName).birthRate
         let geometry = new THREE.BoxGeometry(1, 1, 1);
         let material = new THREE.MeshBasicMaterial({ color: this.color[this.age] });
         this.cube = new THREE.Mesh(geometry, material);
@@ -161,20 +160,17 @@ class Babe {
         let y = poz.y //Math.floor(Math.random() * 10)
         this.location = { x: x, y: y }
         game.coordinate.set({ x: x, y: y }, 1)
-        this.cube.position.set(x - 0.5, 0, y + 0.5)
+        this.cube.position.set(x -0.5 , 0, y + 0.5)
         game.scene.add(this.cube)
-        this.cube.material.color.set(this.color[this.age])
     }
 
     mutate() {
-        if(Math.random()){
-            for (let index in game.abilityLib)
-            {
-                if (Math.random() <= game.abilityLib[index].probability)
-                {
-                    console.log("mutated");
-                    if (this.abilities.filter((e:any)=>{return e == game.abilityLib[index]}).length == 1){
-                        console.log(game.abilityLib[index].name);
+        if (Math.random()) {
+            for (let index in game.abilityLib) {
+                if (Math.random() <= game.abilityLib[index].probability) {
+                    //console.log("mutated");
+                    if (this.abilities.filter((e: any) => { return e == game.abilityLib[index] }).length == 1) {
+                        //console.log(game.abilityLib[index].name);
 
                     }
                 }
@@ -185,11 +181,14 @@ class Babe {
     update() {
         this.age++
         this.cube.material.color.set(this.color[this.age])
-        if ((this.age >= this.max_age+1)) {
+        if ((this.age >= this.max_age + 1)) {
             this.cube.visible = false
-            game.coordinate.set(this.location, 0) 
-            game.scene.children = game.scene.children.filter((e: any)=>{ //清除场景中多余的cube
+            game.coordinate.set(this.location, 0)
+            game.scene.children = game.scene.children.filter((e: any) => { //清除场景中多余的cube
                 return e != this.cube
+            })
+            game.babeLib = game.babeLib.filter((e: any) => {    //时间复杂度！！！
+                return e.age <= e.max_age 
             })
         }
         this.mutate()
@@ -199,22 +198,22 @@ class Babe {
         let x = this.location.x
         let y = this.location.y
 
-        if ( this.age > this.max_age-1 || this.age < 1 ){
+        if (this.age > this.max_age - 1 || this.age < 1) {
             return
         }
         //暂未考虑边界
         //上下左右 判断 生成
         //无智慧
-        if (game.coordinate.isEmpty({ x: x + 1, y: y })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x + 1, y: y }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x + 1, y: y }))
         }
-        if (game.coordinate.isEmpty({ x: x - 1, y: y })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x - 1, y: y }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x - 1, y: y }))
         }
-        if (game.coordinate.isEmpty({ x: x, y: y + 1 })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x, y: y + 1 }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y + 1 }))
         }
-        if (game.coordinate.isEmpty({ x: x, y: y - 1 })  && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
+        if (game.coordinate.isEmpty({ x: x, y: y - 1 }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y - 1 }))
         }
     }
@@ -236,21 +235,11 @@ class family {
         console.log(this.name);
 
     }
-} 
+}
 
-class coordinate {
+/* class coordinate {  //old
     block: Array<Array<number>> = []; //outter: 16*16 innner: 16*16
     //暂时大小只为256*256
-    /*eg 
-    [
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-                    ......
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        
-                    ......
-    ]
-    */
     constructor() {
         let inner = new Array(16).fill(0)
         this.block = new Array(256).fill(inner)
@@ -279,9 +268,87 @@ class coordinate {
         let r = this.find(poz)
         this.block[r.blockIndex][r.index] = value
     }
-    reset()
-    {
+    reset() {
         let inner = new Array(16).fill(0)
         this.block = new Array(256).fill(inner)
+    }
+
+    //debug     返回给定位置所在区块的状况
+    print(poz: { x: number; y: number; }) {
+        let r = this.find(poz)
+        let t = this.block[r.blockIndex]
+        console.log(t);
+    }
+}
+ */
+
+class coordinate {  //old
+    block: Array<number> = []; //256*256
+
+    constructor() {
+        this.block = new Array(256*256).fill(0)
+    }
+    find(poz: { x: number; y: number; }):number {
+        //stupid
+        let index;
+        let x = 128 + poz.x
+        let y = Math.abs(poz.y - 128)
+        y == 0 || y == 1?y = 0:y = y - 1
+        index = y * 256 + x
+        return index
+    }
+
+    isEmpty(poz: { x: number; y: number; }) {
+        let r = this.find(poz)
+        return !this.block[r] // return 0 or 1
+    }
+
+    set(poz: { x: number; y: number; }, value: number) {
+        let r = this.find(poz)
+        this.block[r] = value
+    }
+    reset() {
+        this.block = new Array(256*256).fill(0)
+    }
+
+    //debug     返回给定位置所在区块的状况
+    print(poz: { x: number; y: number; }) {
+        let r = this.find(poz)
+        let t = this.block[r]
+        console.log(t);
+    }
+}
+
+
+
+export class test {
+    show(poz:{x:number,y:number}){
+        if (game.coordinate.isEmpty(poz)){
+        let geometry = new THREE.BoxGeometry(1, 1, 1);
+        let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        let cube = new THREE.Mesh(geometry, material);
+        game.scene.add(cube)}
+        game.coordinate.set(poz,1)
+    }
+    showBro(poz:{x:number,y:number}){
+        let x = poz.x
+        let y = poz.y
+        console.log("1");
+        
+        //暂未考虑边界
+        //上下左右 判断 生成
+        //无智慧
+        if (game.coordinate.isEmpty({ x: (x + 1), y: y }) ) {
+            this.show({ x: x + 1, y: y })
+        }
+        if (game.coordinate.isEmpty({ x: x - 1, y: y }) ) {
+            this.show({ x: x - 1, y: y })
+        }
+        if (game.coordinate.isEmpty({ x: x, y: y + 1 }) ) {
+            this.show({ x: x, y: y + 1 })
+        }
+        if (game.coordinate.isEmpty({ x: x, y: y - 1 })) {
+            this.show({ x: x, y: y - 1 })
+        }
     }
 }

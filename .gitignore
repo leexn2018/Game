@@ -26,13 +26,8 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-src/assets/js/class.zip
-src/assets/js/index.js
-src/assets/js/three.module.js
-src/assets/js/class.zip
-src/assets/js/index.js
 src/assets/js/three.module.js
 src/assets/js/ability.js
 src/assets/js/class.js
 src/assets/js/class.js
-src/assets/js/class.js
+todo.md
