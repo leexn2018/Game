@@ -8,4 +8,4 @@ export const lerp16 = ( x:number, y:number, t:number ) => {
         r.push(Number(("0x" + Math.round(x + dt * i).toString(16))))
     }
     return r
-}
+} 
