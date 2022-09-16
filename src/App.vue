@@ -1,27 +1,34 @@
 <template>
   <div id="loading">
-    <h1> loading </h1>
+    <div>
+      <h1> loading </h1>
+    </div>
   </div>
-  <div v-if="settings" id="settings">
-    <input v-model="bR" placeholder="birthRate:[0,1]">
-    <input v-model="mM" placeholder="maxMember:type what you like">
-    <input v-model="fZ" placeholder="no vaild">
-    <br />
-    <span v-if="_a" id="start" @click="start">start</span>
-    <span v-else id="reset" @click="reset">reset</span>
+  <div v-if="settings" id="settings"> {{ text }}
+    <!--   <input v-model="bR" placeholder="no valid">
+    <input v-model="mM" placeholder="no valid">
+    <input v-model="fZ" placeholder="no vaild">   -->
+    
+    <div v-if="_a" id="start" @click="start"><p>start</p></div>
+    <div v-else id="reset" @click="reset"><p>reset</p></div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { Game , test } from "./assets/js/class.js"
+//import { Game , test } from "./assets/js/class.js"
 import { ref } from 'vue'
-import * as ability from './assets/js/ability.js'
+//import * as ability from './assets/js/ability.js'
+import { Game } from './assets/js/game.js'
 let _a = ref(true)
 let settings = ref(false)
+let text = ref('')
 const mM = ref('')
 const bR = ref('')
 const fZ = ref('')
+const change = () => {
+
+}
 const start = () => {
   if (bR.value != "" || mM.value != "") {
     game.start({ birthRate: Number(bR.value), maxMember: Number(mM.value) })
@@ -41,16 +48,21 @@ const reset = () => {
 
 onMounted(() => {
   //delete loading view
-  console.log("loaded");
-  let loading = document.querySelector("#loading")
-  loading?.parentNode?.removeChild(loading)
+
   //set view
   settings.value = !settings.value
   //ability define
 
   window.game = new Game()
-  ability.reg()
-  window.test = new test()
+  game.init()
+  let i = setInterval(() => {
+    if (game.isReady) {
+      console.log("loaded");
+      let loading = document.querySelector("#loading")
+      loading?.parentNode?.removeChild(loading)
+      clearInterval(i)
+    }
+  }, 500)
 })
 
 
@@ -58,26 +70,36 @@ onMounted(() => {
 
 </script>
 <style>
-#settings {
-  position: absolute;
-  top: 10vh;
-  background-color: aqua;
-  justify-content: center;
-}
-
 #loading {
-  margin: 40vh 33vw;
+  width: 100vw;
+  height: 100vh;
 }
 
-#loading>div {
-  margin: 0;
+#loading > div {
+  margin: 44vh 33vw;
 }
 
 body {
-  margin: 0
+  margin: 0;
+  overflow: hidden;
+}
+#settings {
+  position:absolute;
+  bottom: 0px;
+  left: 45vw;
+  width: 10vw;
+  height: 6vh;
+  background-color: aqua;
+  justify-content: center;
+}
+#settings > div {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  user-select: none;
 }
 
-span {
-  margin-left: 5vw;
+#settings > div > p {
+  text-align: center;
 }
 </style>

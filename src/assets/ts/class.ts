@@ -110,6 +110,35 @@ export class Game {
             this.babeLib[babe]?.genChild()
         }
         //update babeLib
+ /*        for (let index in game.coordinate.block)
+        {   
+            let poz = game.coordinate.toPoint(index)
+            let babe = game.coordinate.findBabe(index)
+            let x = poz.x  ; let y = poz.y
+            let i = 0;
+            i = i   + game.coordinate.isNotEmpty({ x: x - 1, y: y + 1 }) 
+                    + game.coordinate.isNotEmpty({ x: x , y: y + 1 })
+                    + game.coordinate.isNotEmpty({ x: x + 1, y: y +1 })
+                    + game.coordinate.isNotEmpty({ x: x -1, y: y })
+                    + game.coordinate.isNotEmpty({ x: x + 1, y: y })
+                    + game.coordinate.isNotEmpty({ x: x - 1, y: y - 1 })
+                    + game.coordinate.isNotEmpty({ x: x , y: y - 1 })
+                    + game.coordinate.isNotEmpty({ x: x + 1, y: y - 1 })
+            console.log(i);
+            
+            if (i==3 && game.coordinate.isEmpty({ x: x , y: y })){
+                game.babeLib.push(new Babe(game.babeLib[0].family, { x: x, y: y }))
+            }
+            if (i<2 && !game.coordinate.isEmpty({ x: x , y: y })){
+                babe.death()
+            }
+            if ((i==2 || i==3 )&& !game.coordinate.isEmpty({ x: x , y: y })){
+                return      //keep
+            }
+            if (i>3 && !game.coordinate.isEmpty({ x: x , y: y })){
+                babe.death()
+            }
+        } */
         
     }
     start(config: config) {
@@ -118,6 +147,18 @@ export class Game {
         this.familyLib.push(new family(this.config));
         game.familyLib[0].familyAbilities.push(this.findAbilityByName("lifeImprove"))
         game.babeLib.push(new Babe(game.familyLib[0].name, { x: 0, y: 0 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: -1, y: 0 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: 1, y: 0 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: 2, y: 1 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: 2, y: 2 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: 2, y: 3 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: -2, y: 1 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: -2, y: 2 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: -2, y: 3 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: 0, y: 4 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: -1, y: 4 }))
+        game.babeLib.push(new Babe(game.familyLib[0].name, { x: 1, y: 4 }))
+        
     }
 
     reset() {
@@ -141,9 +182,6 @@ class Babe {
     abilities!: any;
     birthRate!: number;
     constructor(familyName: string, poz: { x: number; y: number; }) {
-        this.age = 0
-        this.family = familyName
-        this.abilities = this.inheritAbilitiesFromFamily()
 
         //activate ability
         for (let index in this.abilities) {
@@ -165,6 +203,9 @@ class Babe {
     }
 
     mutate() {
+        if ((this.age >= this.max_age + 1)){
+            return
+        }
         if (Math.random()) {
             for (let index in game.abilityLib) {
                 if (Math.random() <= game.abilityLib[index].probability) {
@@ -181,17 +222,22 @@ class Babe {
     update() {
         this.age++
         this.cube.material.color.set(this.color[this.age])
-        if ((this.age >= this.max_age + 1)) {
-            this.cube.visible = false
-            game.coordinate.set(this.location, 0)
-            game.scene.children = game.scene.children.filter((e: any) => { //清除场景中多余的cube
-                return e != this.cube
-            })
-            game.babeLib = game.babeLib.filter((e: any) => {    //时间复杂度！！！
-                return e.age <= e.max_age 
-            })
+            if ((this.age >= this.max_age + 1)) {
+            this.death()
         }
         this.mutate()
+    }
+
+    death(){
+        this.cube.visible = false
+        game.coordinate.set(this.location, 0)
+        
+        game.scene.children = game.scene.children.filter((e: any) => { //清除场景中多余的cube
+            return e != this.cube
+        })
+        game.babeLib = game.babeLib.filter((e: any) => {    //
+            return e.age <= e.max_age 
+        })
     }
 
     genChild() {
@@ -204,6 +250,7 @@ class Babe {
         //暂未考虑边界
         //上下左右 判断 生成
         //无智慧
+
         if (game.coordinate.isEmpty({ x: x + 1, y: y }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x + 1, y: y }))
         }
@@ -216,6 +263,8 @@ class Babe {
         if (game.coordinate.isEmpty({ x: x, y: y - 1 }) && Math.random() <= this.birthRate && game.babeLib.length <= game.findFamilyByName(this.family).maxMember) {
             game.babeLib.push(new Babe(this.family, { x: x, y: y - 1 }))
         }
+
+
     }
 
     inheritAbilitiesFromFamily(): [] {
@@ -282,11 +331,14 @@ class family {
 }
  */
 
-class coordinate {  //old
+class coordinate {  //new
     block: Array<number> = []; //256*256
 
     constructor() {
         this.block = new Array(256*256).fill(0)
+        supper()
+        console.log(this);
+        
     }
     find(poz: { x: number; y: number; }):number {
         //stupid
@@ -298,9 +350,23 @@ class coordinate {  //old
         return index
     }
 
+    toPoint(i:number){
+        let x , y
+        i % 256 == 0? x = i : x = i % 256
+        Math.floor(i / 256) == 0 || Math.floor(i / 256) == i / 256 ? y = Math.floor(i / 256) : y = Math.floor(i / 256)
+        x = x -128
+        y = 128 - y -1
+        return {x:x,y:y}
+    }
+
     isEmpty(poz: { x: number; y: number; }) {
         let r = this.find(poz)
         return !this.block[r] // return 0 or 1
+    }
+
+    isNotEmpty(poz: { x: number; y: number; }) {
+        let r = this.find(poz)
+        return this.block[r] // return 0 or 1
     }
 
     set(poz: { x: number; y: number; }, value: number) {
@@ -316,6 +382,13 @@ class coordinate {  //old
         let r = this.find(poz)
         let t = this.block[r]
         console.log(t);
+    }
+
+    findBabe(index:number){
+        let poz = this.toPoint(index)
+        return game.babeLib.filter((e:any)=>{
+             return e.location == poz
+        })
     }
 }
 

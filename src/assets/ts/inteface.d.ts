@@ -1,4 +1,5 @@
 declare const game: Game
+declare const pointer
 
 declare module './three.module.js' {
     import * as THREE from 'three'
