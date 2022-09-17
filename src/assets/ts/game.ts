@@ -22,6 +22,10 @@ function onPointerMove( event: { clientX: number; clientY: number; } ) {
 
 }
 
+const clickUpdate = () =>{
+    game.nextRound()
+}
+
 function render() {
 
 	// 通过摄像机和鼠标位置更新射线
@@ -30,6 +34,9 @@ function render() {
 	// 计算物体和射线的焦点  返回很多东西
 	const intersects = raycaster.intersectObjects( game.scene.children );
     //console.log(intersects[0].object.position);
+    //console.log(intersects[0].object);
+    if(intersects[0].object.isLine) {return -1}
+    if(intersects[0].object.isChild) {return -1}
     game.children.push(new Child( new Points(intersects[0].object.position.x,intersects[0].object.position.z), status.alive))    
 }
 
@@ -138,7 +145,8 @@ export class Game {
         this.coordinate.for((poz:Points)=>{
             let r = this.coordinate.sumAround(poz)
             //if(r!=0) console.log(r,poz.toGame());
-            
+            if(r==1){console.log(poz);
+            }
 
             if(r==3 && this.coordinate.isEmpty(poz)){
                 //console.log(this.coordinate.isEmpty(poz));
@@ -164,6 +172,7 @@ export class Game {
     {   
         this.isRunning = true
         document.querySelector("canvas")?.removeEventListener("click",render)
+        document.querySelector("canvas")?.addEventListener("click",clickUpdate)
         /* this.children.push(new Child(new Points(-1, 0),status.alive))
         this.children.push(new Child(new Points(1, 0),status.alive))
         this.children.push(new Child(new Points(0, -1),status.alive))
@@ -195,6 +204,7 @@ export class Game {
         })
         this.children = []
         document.querySelector("canvas")?.addEventListener("click",render)
+        document.querySelector("canvas")?.removeEventListener("click",clickUpdate)
     }
 }
 class Coordinate {
@@ -309,7 +319,7 @@ class Child {
         cube.isChild = true
         game.coordinate.set(this.position.toCoordinate(), args[0])
         game.coordinate.setIndex(this.position.toCoordinate(),this.tag)
-        cube.position.set( this.position.x , 0, this.position.y)
+        cube.position.set( this.position.x , 1, this.position.y)
         game.scene.add(cube)
     }
 }
